@@ -5,7 +5,7 @@ import re
 import numpy as np
 import random
 
-#client = boto3.client('lambda')
+client = boto3.client('lambda', region_name='us-east-1')
 
 def trigger_worker(lname, data, conn):
     ## helper function that triggers the md_worker lambda
@@ -14,7 +14,7 @@ def trigger_worker(lname, data, conn):
         InvocationType = 'RequestResponse',
         Payload = json.dumps(data)
     )
-    print(response)
+    #print(response)
     result = response.get('Payload')
     conn.send(result.read())
     conn.close()
@@ -25,21 +25,24 @@ def trigger_worker(lname, data, conn):
 # we'll start with 2D (a square), then we can work up to 3D later
 
 side_length = 20
-num_particles = 10
-dimensions = 2
+num_particles = 100
+dimensions = 3
 # create positions_array with x and y columns with random positions in our box
 position_array = np.random.rand(num_particles, dimensions)*side_length
 
 # create charge_array with charges -1 and 1
 charge_array = np.ones(num_particles)
 for p in range(num_particles):
-    charge_array[0] = random.choice([-1, 1])
+    charge_array[p] = random.choice([-1, 1])
+
+print(position_array)
+print(charge_array)
 
 num_workers = 2
 processes = []
 parent_connections = []
 
-return position_array
+exit()
 # create a process per instance
 for i in range(5):            
     # create a pipe for communication
@@ -65,11 +68,5 @@ for parent_connection in parent_connections:
 for answer in answers:
     answer =  re.sub(r"\\",r" ",answer)
 
-print(son.dumps(answers))
+print(json.dumps(answers))
 
-
-event = {
-    "key1"   : "value1"
-}
-run_response = lambda_handler(event,'')
-print(run_response)
