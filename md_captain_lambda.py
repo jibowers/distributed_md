@@ -2,8 +2,10 @@ from multiprocessing import Process, Pipe
 import boto3
 import json
 import re
+import numpy as np
+import random
 
-client = boto3.client('lambda')
+#client = boto3.client('lambda')
 
 def trigger_worker(lname, data, conn):
     ## helper function that triggers the md_worker lambda
@@ -19,9 +21,25 @@ def trigger_worker(lname, data, conn):
 
 def lambda_handler(event, context):
 
+    ## create our space with particles
+    # we'll start with 2D (a square), then we can work up to 3D later
+
+    side_length = 20
+    num_particles = 10
+    dimensions = 2
+    # create positions_array with x and y columns with random positions in our box
+    position_array = np.random.rand(num_particles, dimensions)*side_length
+
+    # create charge_array with charges -1 and 1
+    charge_array = np.ones(num_particles)
+    for p in range(num_particles):
+        charge_array[0] = random.choice([-1, 1])
+
+    num_workers = 2
     processes = []
     parent_connections = []
 
+    return position_array
     # create a process per instance
     for i in range(5):            
         # create a pipe for communication
@@ -48,3 +66,10 @@ def lambda_handler(event, context):
         answer =  re.sub(r"\\",r" ",answer)
 
     return json.dumps(answers)
+
+
+event = {
+    "key1"   : "value1"
+}
+run_response = lambda_handler(event,'')
+print(run_response)
