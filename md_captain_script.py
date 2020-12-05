@@ -4,6 +4,7 @@ import json
 import re
 import numpy as np
 import random
+import math
 
 client = boto3.client('lambda', region_name='us-east-1')
 
@@ -26,7 +27,7 @@ def trigger_worker(lname, data, conn):
 side_length = 20
 num_particles = 100
 dimensions = 3
-timestep = 0.00001
+timestep = 0.00000001
 # create positions_array with x and y columns with random positions in our box
 position_array = np.random.rand(num_particles, dimensions)*side_length
 
@@ -38,17 +39,21 @@ max_vi = 10
 velocity_array = np.random.rand(num_particles, dimensions) * max_vi
 
 #TODO find more accurate eps and rmins for the system
-eps = [num_particles] * -0.1
+eps = np.ones(num_particles) * -0.1
 rmins = np.random.rand(num_particles, 1) + 0.5
 
+print("Positions:")
 print(position_array)
+print("Charges:")
 print(charge_array)
+print("Velocities:")
 print(velocity_array)
 
-num_workers = 2
+num_workers = 4
 processes = []
 parent_connections = []
-particles_per_split = num_particles/num_workers
+particles_per_split = math.floor(num_particles/num_workers)
+
 
 # create a process per worker
 for i in range(num_workers):            
@@ -58,8 +63,12 @@ for i in range(num_workers):
 
     # create the process, pass instance and connection
     start_index = i*particles_per_split
-    end_index = (i+1)*particles_per_split-1
-    data = {"start": start_index, "end": end_index, "positions": position_array, "charges":charge_array, "velocities": velocity_array[start_index:end_index, :], "timestep": timestep, "eps": eps, "rmins": rmins}
+    if i == num_workers-1: #last worker
+        end_index = num_particles - 1
+    else:
+        end_index = (i+1)*particles_per_split-1
+    print("Worker {} start index: {}, end index: {}".format(i, start_index, end_index))
+    data = {"start": start_index, "end": end_index, "positions": position_array.tolist(), "charges":charge_array.tolist(), "velocities": velocity_array[start_index:end_index].tolist(), "timestep": timestep, "eps": eps.tolist(), "rmins": rmins.tolist(), "bounds": side_length}
     process = Process(target=trigger_worker, args=("md_worker", data, child_conn,))
     processes.append(process)
 
