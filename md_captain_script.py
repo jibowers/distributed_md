@@ -101,15 +101,15 @@ for n in range(1):
         #answer =  re.sub(r"\\",r" ",answer)
 
     print("## Putting the returned answers together in order")
-    new_positions = np.empty(3)
+    new_positions = []
     for i in sorted (received_positions) : 
-        new_positions = np.append(new_positions, received_positions.get(i))
-    position_array = new_positions
+        new_positions.append(received_positions.get(i))
+    position_array = np.asanyarray(new_positions)
 
     new_velocities= np.empty(3)
     for i in sorted (received_velocities) : 
-        new_velocities = np.append(new_positions, received_velocities.get(i))
-    velocity_array = new_velocities
+        new_velocities.append(received_velocities.get(i))
+    velocity_array = np.asanyarray(new_velocities)
 
     print("{} iteration\nPositions: {}\nVelocities: {}".format(n, position_array, velocity_array))
 
