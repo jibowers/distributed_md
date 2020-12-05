@@ -27,7 +27,11 @@ def trigger_worker(lname, data, conn):
 side_length = 20
 num_particles = 100
 dimensions = 3
-timestep = 0.00000001
+timestep = 1 * 10**-12
+total_time = 0.01 * 10**-9
+num_steps = math.floor(total_time/timestep)
+print("This will take {} steps of {} seconds each".format(num_steps, timestep))
+
 # create positions_array with x and y columns with random positions in our box
 position_array = np.random.rand(num_particles, dimensions)*side_length
 
@@ -54,36 +58,48 @@ processes = []
 parent_connections = []
 particles_per_split = math.floor(num_particles/num_workers)
 
+f = open("md_sim.txt", "a")
+f.write("Now the file has more content!")
 
-# create a process per worker
-for i in range(num_workers):            
-    # create a pipe for communication
-    parent_conn, child_conn = Pipe()
-    parent_connections.append(parent_conn)
 
-    # create the process, pass instance and connection
-    start_index = i*particles_per_split
-    if i == num_workers-1: #last worker
-        end_index = num_particles - 1
-    else:
-        end_index = (i+1)*particles_per_split-1
-    print("Worker {} start index: {}, end index: {}".format(i, start_index, end_index))
-    data = {"start": start_index, "end": end_index, "positions": position_array.tolist(), "charges":charge_array.tolist(), "velocities": velocity_array[start_index:end_index].tolist(), "timestep": timestep, "eps": eps.tolist(), "rmins": rmins.tolist(), "bounds": side_length}
-    process = Process(target=trigger_worker, args=("md_worker", data, child_conn,))
-    processes.append(process)
+for n in range(1):
 
-for process in processes:
-    process.start()
+    # create a process per worker
+    for i in range(num_workers):            
+        # create a pipe for communication
+        parent_conn, child_conn = Pipe()
+        parent_connections.append(parent_conn)
 
-for process in processes:
-    process.join()
+        # create the process, pass instance and connection
+        start_index = i*particles_per_split
+        if i == num_workers-1: #last worker
+            end_index = num_particles - 1
+        else:
+            end_index = (i+1)*particles_per_split-1
+        print("Worker {} start index: {}, end index: {}".format(i, start_index, end_index))
+        data = {"start": start_index, "end": end_index, "positions": position_array.tolist(), "charges":charge_array.tolist(), "velocities": velocity_array[start_index:end_index].tolist(), "timestep": timestep, "eps": eps.tolist(), "rmins": rmins.tolist(), "bounds": side_length}
+        process = Process(target=trigger_worker, args=("md_worker", data, child_conn,))
+        processes.append(process)
 
-answers = []
-for parent_connection in parent_connections:
-    message = parent_connection.recv().decode()
-    answers.append(message)
+    for process in processes:
+        process.start()
 
-for answer in answers:
-    answer =  re.sub(r"\\",r" ",answer)
+    for process in processes:
+        process.join()
 
-print(json.dumps(answers))
+    raw_answers = []
+    received_positions = {}
+    received_velocities = {}
+    for parent_connection in parent_connections:
+        message = parent_connection.recv().decode()
+        raw_answers.append(message)
+        dict_message = json.loads(message)
+        received_positions[dict_message.get("start_index")] = dict_message.get("positions")
+        received_velocities[dict_message.get("start_index")] = dict_message.get("velocities")
+
+    #for answer in answers:
+        #answer =  re.sub(r"\\",r" ",answer)
+
+    print(raw_answers)
+
+f.close()
