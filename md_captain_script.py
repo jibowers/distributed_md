@@ -20,7 +20,6 @@ def trigger_worker(lname, data, conn):
     conn.close()
 
 
-
 ## create our space with particles
 # we'll start with 2D (a square), then we can work up to 3D later
 
@@ -31,10 +30,8 @@ timestep = 0.00001
 # create positions_array with x and y columns with random positions in our box
 position_array = np.random.rand(num_particles, dimensions)*side_length
 
-# create charge_array with charges -1 and 1
-charge_array = np.ones(num_particles)
-for p in range(num_particles):
-    charge_array[p] = random.choice([-1, 1])
+# create charge_array with point charges between -1 and 1
+charge_array = np.random.rand(num_particles)*2-1 
 
 # create velocity_array with randoom velocities between 0 and max initial velocity
 max_vi = 10
