@@ -54,16 +54,15 @@ print("Velocities:")
 print(velocity_array)
 
 num_workers = 4
-processes = []
-parent_connections = []
 particles_per_split = math.floor(num_particles/num_workers)
 
 f = open("md_sim.txt", "a")
 f.write("Now the file has more content!")
 
 
-for n in range(1):
-
+for n in range(3):
+    processes = []
+    parent_connections = []
     # create a process per worker
     for i in range(num_workers):            
         # create a pipe for communication
@@ -77,11 +76,9 @@ for n in range(1):
         else:
             end_index = (i+1)*particles_per_split-1
         print("Worker {} start index: {}, end index: {}".format(i, start_index, end_index))
-        data = {"start": start_index, "end": end_index, "positions": position_array.tolist(), "charges":charge_array.tolist(), "velocities": velocity_array[start_index:end_index].tolist(), "timestep": timestep, "eps": eps.tolist(), "rmins": rmins.tolist(), "bounds": side_length}
+        data = {"start": start_index, "end": end_index, "positions": position_array.tolist(), "charges":charge_array.tolist(), "velocities": velocity_array[start_index:end_index+1].tolist(), "timestep": timestep, "eps": eps.tolist(), "rmins": rmins.tolist(), "bounds": side_length}
         process = Process(target=trigger_worker, args=("md_worker", data, child_conn,))
         processes.append(process)
-
-    for process in processes:
         process.start()
 
     for process in processes:
@@ -96,7 +93,7 @@ for n in range(1):
         dict_message = json.loads(message)
         received_positions[dict_message.get("start_index")] = dict_message.get("positions")
         received_velocities[dict_message.get("start_index")] = dict_message.get("velocities")
-
+        print(message)
     #for answer in answers:
         #answer =  re.sub(r"\\",r" ",answer)
 
@@ -117,4 +114,6 @@ for n in range(1):
 
     print("{} iteration\nPositions: {}\nVelocities: {}".format(n, position_array, velocity_array))
 
+    print("Number of positions: {}".format(len(position_array)))
+    print("Number of velocities: {}".format(len(velocity_array)))
 f.close()
