@@ -60,7 +60,7 @@ f = open("md_sim.txt", "a")
 f.write("Now the file has more content!")
 
 
-for n in range(3):
+for n in num_steps:
     processes = []
     parent_connections = []
     # create a process per worker
@@ -116,4 +116,5 @@ for n in range(3):
 
     print("Number of positions: {}".format(len(position_array)))
     print("Number of velocities: {}".format(len(velocity_array)))
+    f.write(str(position_array))
 f.close()
