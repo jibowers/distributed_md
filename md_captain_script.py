@@ -28,7 +28,7 @@ side_length = 20
 num_particles = 100
 dimensions = 3
 timestep = 1 * 10**-12
-total_time = 0.01 * 10**-9
+total_time = 0.05 * 10**-9
 num_steps = math.floor(total_time/timestep)
 print("This will take {} steps of {} seconds each".format(num_steps, timestep))
 
@@ -39,7 +39,7 @@ position_array = np.random.rand(num_particles, dimensions)*side_length
 charge_array = np.random.rand(num_particles)*2-1 
 
 # create velocity_array with randoom velocities between 0 and max initial velocity
-max_vi = 10
+max_vi = 1000
 velocity_array = np.random.rand(num_particles, dimensions) * max_vi
 
 #TODO find more accurate eps and rmins for the system
@@ -57,10 +57,10 @@ num_workers = 4
 particles_per_split = math.floor(num_particles/num_workers)
 
 f = open("md_sim.txt", "a")
-f.write("Now the file has more content!")
 
 
-for n in num_steps:
+for n in range(num_steps):
+    print("Starting iteration #{}".format(n))
     processes = []
     parent_connections = []
     # create a process per worker
@@ -116,5 +116,5 @@ for n in num_steps:
 
     print("Number of positions: {}".format(len(position_array)))
     print("Number of velocities: {}".format(len(velocity_array)))
-    f.write(str(position_array))
+    f.write(str(position_array) + "\n")
 f.close()
