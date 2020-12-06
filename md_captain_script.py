@@ -5,6 +5,7 @@ import re
 import numpy as np
 import random
 import math
+from datetime import datetime
 
 client = boto3.client('lambda', region_name='us-east-1')
 
@@ -25,10 +26,10 @@ def trigger_worker(lname, data, conn):
 # we'll start with 2D (a square), then we can work up to 3D later
 
 side_length = 20
-num_particles = 100
+num_particles = 5
 dimensions = 3
-timestep = 1 * 10**-12
-total_time = 0.05 * 10**-9
+timestep = 100000 * 10**-12
+total_time = timestep * 50 #0.5 * 10**-9
 num_steps = math.floor(total_time/timestep)
 print("This will take {} steps of {} seconds each".format(num_steps, timestep))
 
@@ -53,10 +54,11 @@ print(charge_array)
 print("Velocities:")
 print(velocity_array)
 
-num_workers = 4
+num_workers = 2
 particles_per_split = math.floor(num_particles/num_workers)
 
-f = open("md_sim.txt", "a")
+filename = "n{}s{}ts{}w{}-{}".format(num_particles, num_steps, timestep, num_workers, datetime.now().strftime("%m-%d:%H:%M"))
+f = open(filename + ".txt", "x")
 
 
 for n in range(num_steps):
@@ -112,7 +114,7 @@ for n in range(num_steps):
             new_velocities.append(atom)
     velocity_array = np.asanyarray(new_velocities)
 
-    print("{} iteration\nPositions: {}\nVelocities: {}".format(n, position_array, velocity_array))
+    print("{} iteration\nPositions: {}\n".format(n, position_array))
 
     print("Number of positions: {}".format(len(position_array)))
     print("Number of velocities: {}".format(len(velocity_array)))
