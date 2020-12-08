@@ -25,10 +25,12 @@ def trigger_worker(lname, data, conn):
 ## create our space with particles
 # we'll start with 2D (a square), then we can work up to 3D later
 
+start_time = datetime.now()
+
 side_length = 20
-num_particles = 5
+num_particles = 100
 dimensions = 3
-timestep = 100000 * 10**-12
+timestep = 1000 * 10**-12
 total_time = timestep * 50 #0.5 * 10**-9
 num_steps = math.floor(total_time/timestep)
 print("This will take {} steps of {} seconds each".format(num_steps, timestep))
@@ -54,10 +56,10 @@ print(charge_array)
 print("Velocities:")
 print(velocity_array)
 
-num_workers = 2
+num_workers = 20
 particles_per_split = math.floor(num_particles/num_workers)
 
-filename = "n{}s{}ts{}w{}-{}".format(num_particles, num_steps, timestep, num_workers, datetime.now().strftime("%m-%d:%H:%M"))
+filename = "n{}s{}ts{}w{}-{}".format(num_particles, num_steps, timestep, num_workers, datetime.now().strftime("%m%d%H%M%S"))
 f = open(filename + ".txt", "x")
 
 
@@ -95,9 +97,7 @@ for n in range(num_steps):
         dict_message = json.loads(message)
         received_positions[dict_message.get("start_index")] = dict_message.get("positions")
         received_velocities[dict_message.get("start_index")] = dict_message.get("velocities")
-        print(message)
-    #for answer in answers:
-        #answer =  re.sub(r"\\",r" ",answer)
+        #print(message)
 
     print("## Putting the returned answers together in order")
     new_positions = []
@@ -120,3 +120,8 @@ for n in range(num_steps):
     print("Number of velocities: {}".format(len(velocity_array)))
     f.write(str(position_array) + "\n")
 f.close()
+print(charge_array)
+print(filename)
+end_time = datetime.now()
+delta_time = end_time - start_time
+print("This took {}".format(delta_time))
